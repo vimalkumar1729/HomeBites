@@ -1,0 +1,41 @@
+const loadData=async ()=>{
+  let response=await fetch('http://localhost:4000/api/foodData',{
+    method:"POST",
+    headers:{
+      'Content-Type':'application/json'
+    }
+  });
+
+  foodCat=response[0];
+
+}
+
+export default function Home(){
+
+  return (
+    <div>
+      <div><Navbar/></div>
+      <div><Caraouse/></div>
+      <div className="container">
+        foodCat.length > 0
+        ? foodCat.map((data)=>{
+          <div key={data._id}>
+            <div className="fs-3 m-3">
+              {data.CategoryName}
+            </div>
+            <hr />
+            {
+              foodItem.length>0
+              ?
+              foodItem.filter((item)=>(item.CategoryName === data.CategoryName))
+              .map(filterItems=>{
+                return ()
+              })
+            }
+          </div>
+        })
+      </div>
+      <div><Footer/></div>
+    </div>
+  )
+}
