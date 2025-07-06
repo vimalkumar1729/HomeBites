@@ -2,66 +2,102 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/User')
 const { body, validationResult } = require('express-validator');
-const bcrypt=require("bcrypt");
-const jwt=require("jsonwebtoken");
-const jwtSecret="Thisismyfirstprojectinwebdevelop"
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const jwtSecret = "Thisismyfirstprojectinwebdevelop"
+
 router.post("/createuser",
   [
-    body('email').isEmail(),
-    body('password', 'Invalid Password').isLength({ min: 5 }),
-    body('name').isLength({ min: 5 })
+    body(
+      "email",
+      "Incorrect email format (Correct format: user@homebites.com)"
+    ).isEmail(),
 
-  ], async (req, res) => {
+    body(
+      "password",
+      "Incorrect Password (Minimum length of password: 8)"
+    ).isLength({ min: 5 }),
+
+    body("name",
+       "Incorrect name (Minimum length of name: 5)"
+      ).isLength({min: 5}),
+
+    body("location").not().isEmpty(),
+
+  ],
+  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const salt=await bcrypt.genSalt(10);
-    let secPassword = await bcrypt.hash(req.body.password,salt);
     try {
-      await User.create({
+      const salt = await bcrypt.genSalt(10);
+      let secPassword = await bcrypt.hash(req.body.password, salt);
+      const newUser = await User.create({
         name: req.body.name,
-        password: secPassword,
         email: req.body.email,
+        password: secPassword,
         location: req.body.location
-      })
-      res.json({ success: true });
+      });
+      console.log("User created: ", newUser);
+      const responseData = {
+        ...newUser._doc,
+        date: new Date(newUser.date).toISOString(),
+      };
+      res.json({
+        success: true,
+        data: responseData,
+      });
     }
     catch (error) {
-      console.log(error)
-      res.json({ success: false });
+      console.error("Error creating user: ", error);
+      res.status(500).json({
+        success: false,
+        error: "Server error",
+      });
     }
   })
 router.post("/loginuser",
   [
-    body('email').isEmail(),
-    body('password', 'Invalid Password').isLength({ min: 5 }), 
-  ], async (req, res) => {
+    body(
+      "email",
+      "Incorrect email format (Correct format: example@example.com)"
+    ).isEmail(),
+    body(
+      "password",
+      "Incorrect Password (Minimum length of password: 5)"
+    ).isLength({ min: 5 }),
+  ],
+  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    let email = req.body.email;
+
     try {
+      const { email, password } = req.body;
       let userData = await User.findOne({ email });
       if (!userData) {
-        return res.status(400).json({ errors: "Try logging with correct credentials" })
+        return res.status(400).json({ errors: "Invalid credentials" });
       }
-      const pwdCompare= await bcrypt.compare(req.body.password,userData.password);
-      if (!pwdCompare) {
-        return res.status(400).json({ errors: "Incorrect Password" });
+      const isMatch = await bcrypt.compare(req.body.password, userData.password);
+      if (!isMatch) {
+        return res.status(400).json({ errors: "Invalid password" });
       }
-      const data={
-        user:{
-          id:userData.id
+      const data = {
+        user: {
+          id: userData.id
         }
       }
-      const authToken=jwt.sign(data,jwtSecret)
-      return res.json({ success: true ,authToken:authToken});
+      const authToken = jwt.sign(data, jwtSecret)
+      return res.json({ success: true, authToken: authToken });
     }
     catch (error) {
-      console.log(error)
-      res.json({ success: false });
+      console.error("Error in login:", error);
+      res.status(500).json({
+        success: false,
+        error: "Server error",
+      });
     }
   })
 module.exports = router;

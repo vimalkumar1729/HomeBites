@@ -13,17 +13,18 @@ const mongoDB = async () => {
 
     const db = mongoose.connection.db;
 
-    const foodData = await db.collection("fooddata").find({}).toArray();
-    const foodCategory = await db.collection("foodcategory").find({}).toArray();
+    const food_itemsData = await db.collection("food_items").find({}).toArray();
+    const foodCategoryData= await db.collection("foodCategory").find({}).toArray();
     
-    if (!foodData.length || !foodCategory.length) {
-      console.warn("⚠️ One of the collections is empty.");
-    }
-    global.fooddata = foodData;
-    global.foodCategory = foodCategory;
+    // if (!foodData.length || !foodCategory.length) {
+    //   console.warn("⚠️ One of the collections is empty.");
+    // }
+    global.food_items = food_itemsData;
+    global.foodCategory = foodCategoryData;
+    //console.log("Food items fetched: ",global.food_items);
+    // console.log("Food categories fetched: ", global.foodCategory);
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error.message);
-    process.exit(1);
   }
 };
 

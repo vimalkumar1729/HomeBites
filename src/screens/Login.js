@@ -1,8 +1,11 @@
 import React,{useState} from 'react'
 import {Link,useNavigate }from 'react-router-dom'
+import "../screens/Login.css";
+
 export default function Login() {
-  const [credentials, setcredentials] = useState({email:"",password:""})
-  let navigate=useNavigate() 
+  const [credentials, setcredentials] = useState({email:"",password:""});
+  let navigate=useNavigate() ;
+
   const handleSubmit=async(e)=>{
       e.preventDefault();
       const response =await fetch("http://localhost:4000/api/loginuser",{
@@ -11,17 +14,19 @@ export default function Login() {
           'Content-Type':'application/json'
         },
         body:JSON.stringify(
-          {email:credentials.email,password:credentials.password}
-        )
+          {email:credentials.email,
+          password:credentials.password
+        })
       });
       const json=await response.json()
-      console.log(json)
+      console.log("Response from server: ",json);
       if(!json.success){
         alert("Enter valid credentials")
       }
-      if(json.success){
+      else{
+        localStorage.setItem("userEmail",credentials.email);
         localStorage.setItem("authToken",json.authToken);
-        console.log(localStorage.getItem("authToken"));
+        console.log("Stored authToken: " ,localStorage.getItem("authToken"));
         navigate("/");
       }
     }
@@ -29,11 +34,11 @@ export default function Login() {
       setcredentials({...credentials,[event.target.name]:event.target.value})
     }
   return (
-    <div>
+    <div> 
       <div className="container">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">Email address</label>
+            <label htmlFor="exampleInputEmail1" className="form-label-first">Email address</label>
             <input type="email" className="form-control" name='email' value={credentials.email} onChange={onChange} id="exampleInputEmail1" aria-describedby="emailHelp" />
             <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
           </div>
@@ -46,5 +51,5 @@ export default function Login() {
         </form>
       </div>
     </div>
-  )
+  );
 }
